@@ -72,6 +72,10 @@ def odds(a)
     .map { |e| e[1] }
 end
 
+# usage: indexes([1,2,3], ->(i){
+#   #return true or false, using i
+#   i.odd? # will result in returning indexes of only odd numbers
+# })
 def indexes(arr, code)
   arr
     .each_with_index
