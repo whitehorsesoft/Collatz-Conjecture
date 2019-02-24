@@ -1,3 +1,11 @@
+require 'sequel'
+
+def db
+  d = Sequel.postgres('tester')
+  d.extension :pg_array
+  return d
+end
+
 def collatz(start)
   result = []
   while start != 1
@@ -23,20 +31,25 @@ def compares
   r
 end
 
+def tbl
+  return db[:collatz]
+end
+
 def c
-  r = {}
+  t = tbl
   (1..9).each do |i|
-    (0..20).each do |j|
+    (0..10).each do |j|
       Thread.new do
         n = i * 10**j
-        r[n] = collatz n
+        results = collatz n
+        # puts sprintf("n: %i, %s", n, results)
+        t.insert(:id => n, :nums => Sequel.pg_array(results))
       end
     end
   end
   Thread.list.each do |t|
     t.join if t != Thread.current
   end
-  r
 end
 
 # split array into arrays where each
@@ -79,4 +92,18 @@ def tries
     a << temp_str
   end
   a
+end
+
+def db_setup
+  begin
+    db.drop_table(:collatz)
+    p 'collatz dropped'
+  rescue
+  end
+
+  db.create_table :collatz do
+    column :id, 'bigint'
+    column :nums, 'bigint[]'
+  end
+  p 'collatz created'
 end
