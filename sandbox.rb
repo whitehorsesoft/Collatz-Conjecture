@@ -42,61 +42,31 @@ module Collatz
 
   def self.char_if_pressed
     begin
-      system("stty raw -echo")
+      system('stty raw -echo')
       c = nil
-      if $stdin.ready?
-        c = $stdin.getc
-      end
+      c = $stdin.getc if $stdin.ready?
       c.chr if c
     ensure
-      system("stty -raw echo")
+      system('stty -raw echo')
     end
   end
-  
+
   # generates sequences for a large amount of numbers
   def self.generate
-    require 'thwait'
     st = Time.now
-
     start_id = Sequence.all.last[:id] + 1
-    tw = ThreadsWait.new
-    # ts = []
     sequence = Sequence.new
     (start_id..start_id + 10**5).each do |i|
-      # slowest: 46 secs
-      # ts << Thread.new do
-      #   sequence.set(id: i, nums: Sequel.pg_array(collatz(i)))
-      #   Thread.current.exit
-      # end
-
       thr = Thread.new do
         sequence.set(id: i, nums: Sequel.pg_array(collatz(i)))
-        # Thread.current.exit
       end
-
-      # 8 secs
-      # if tw.threads.count < 1
-      #   tw.join_nowait thr
-      # else
-      #   tw.join thr
-      # end
 
       thr.join
 
       if i % 10**4 == 0
-        # sequence.save
-
         c = char_if_pressed
         if c
           puts i
-          # slowest: 46 secs
-          # while ts.select{|t| t.alive?}.count > 0
-          #   puts ts.select(&:alive?).count.to_s + " threads alive"
-          # end
-
-          # 8 secs
-          # puts tw.threads.count
-          # tw.all_waits
 
           while Thread.list.select{|t| t.alive?}.count > 1
             puts Thread.list.select{|t| t.alive?}.count.to_s + 'threads alive'
@@ -107,14 +77,8 @@ module Collatz
           puts 'saved'
         end
       end
-   end
+    end
 
-    # tw.all_waits
-
-    # puts "done, waiting for active to stop"
-    # Thread.list.each do |t|
-    #   t.join if t != Thread.current
-    # end
     sequence.save
 
     puts format('completed in %f secs', Time.now - st)
@@ -170,5 +134,4 @@ end
 
 # Collatz.db_setup
 # Collatz.exponential_tables
-# Collatz.generate
-Collatz.matrix
+Collatz.generate
